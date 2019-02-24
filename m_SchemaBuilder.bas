@@ -33,6 +33,7 @@ Private Property Get CString() As String
 End Property
 
 
+
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ''' Run this subroutine to retrieve the database schema and populate
 ''' and create a new class for each table that contains the table schema.
@@ -42,27 +43,30 @@ Sub CreateTableClasses()
     Dim cn As New ADODB.Connection
     Dim moduleNames As New Dictionary
     
-    Dim Catalog As New ADOX.Catalog
-    Dim VBComp As VBIDE.vbComponent
+    Dim dbCatalog As New ADOX.Catalog
+    Dim component As VBIDE.vbComponent
     
-    Dim VBProj As VBIDE.vbProject
-    Set VBProj = ActiveWorkbook.vbProject
+    Dim editor As VBIDE.VBE
+    Dim project As VBIDE.vbProject
+    
+    Set editor = Application.VBE
+    Set project = editor.ActiveVBProject
     
     RemoveExistingTables
     
     cn.Open CString
-    Set Catalog.ActiveConnection = cn
+    Set dbCatalog.ActiveConnection = cn
     
     Dim table As ADOX.table, column As ADOX.column
-    For Each table In Catalog.Tables
+    For Each table In dbCatalog.Tables
         If table.Type = "TABLE" Or table.Type = "VIEW" Then
         
-            Set VBComp = VBProj.VBComponents.Add(vbext_ct_ClassModule)
-            VBComp.Name = TABLE_PREFIX & table.Name
+            Set component = project.VBComponents.Add(vbext_ct_ClassModule)
+            component.Name = TABLE_PREFIX & table.Name
             
-            PopulateTableClass table.Name, table, VBComp
+            PopulateTableClass table.Name, table, component
             
-            moduleNames.Add table.Name, VBComp.Name
+            moduleNames.Add table.Name, component.Name
             
         End If
     Next
@@ -70,7 +74,7 @@ Sub CreateTableClasses()
     cn.Close
     Set cn = Nothing
     
-    CreateDatabaseSchemaClass moduleNames, VBProj
+    CreateDatabaseSchemaClass moduleNames, project
             
 End Sub
 
@@ -161,18 +165,15 @@ End Sub
 ''' Removes all the modules whose name begin with "tbl_". These represent the database
 ''' tables.
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-Private Sub RemoveExistingTables()
-    
-    Dim VBProj As VBIDE.vbProject
-    Set VBProj = ActiveWorkbook.vbProject
+Private Sub RemoveExistingTables(project As VBIDE.vbProject)
     
     Dim mdl As Variant
     Dim i As Long
     Dim collClassNames As New Collection
     
-    For i = 1 To VBProj.VBComponents.Count
+    For i = 1 To project.VBComponents.Count
         Dim cName As String
-        cName = VBProj.VBComponents(i).Name
+        cName = project.VBComponents(i).Name
         
         If cName Like TABLE_PREFIX & "*" Then
             collClassNames.Add cName
@@ -181,8 +182,8 @@ Private Sub RemoveExistingTables()
     
     For Each mdl In collClassNames
         Dim component As VBIDE.vbComponent
-        Set component = VBProj.VBComponents(mdl)
-        DeleteModule VBProj, component
+        Set component = project.VBComponents(mdl)
+        DeleteModule project, component
     Next
     
 End Sub
