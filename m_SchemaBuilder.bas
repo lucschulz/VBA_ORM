@@ -106,6 +106,7 @@ Private Sub CreateDatabaseSchemaClass(ByVal moduleNames As Dictionary, project A
     Dim table As String
     Dim module As String
 
+                                'Annotation for use with RubberDuck add-in
     component.CodeModule.InsertLines LineNum, "'@Folder(""Tables"")"
     IncrementLineNumber
     
