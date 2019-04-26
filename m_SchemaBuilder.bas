@@ -1,4 +1,5 @@
 Attribute VB_Name = "m_SchemaBuilder"
+'@Folder("Modules")
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ''' REQUIRED REFERENCES
 '''
@@ -8,7 +9,7 @@ Attribute VB_Name = "m_SchemaBuilder"
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Option Explicit
 
-Private CodeMod As VBIDE.codeModule
+Private CodeMod As VBIDE.CodeModule
 Private LineNum As Long
 
 'This prefix can be anything that's valid for a module/class name but must be different from
@@ -27,9 +28,9 @@ Private Const SCHEMA_MODULE_NAME = "db_Schema"
 ''' Set this property to return the connection string for the database
 ''' you want to map.
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-Private Property Get CString() As String
+Private Property Get cString() As String
     Main.SetConnectionStringAndVersion
-    CString = Main.GetConnectionString
+    cString = Main.GetConnectionString
 End Property
 
 
@@ -52,9 +53,11 @@ Sub CreateTableClasses()
     Set editor = Application.VBE
     Set project = editor.ActiveVBProject
     
-    RemoveExistingTables
     
-    cn.Open CString
+    RemoveExistingTables project
+    
+    cn.Open cString
+    
     Set dbCatalog.ActiveConnection = cn
     
     Dim table As ADOX.table, column As ADOX.column
@@ -63,6 +66,7 @@ Sub CreateTableClasses()
         
             Set component = project.VBComponents.Add(vbext_ct_ClassModule)
             component.Name = TABLE_PREFIX & table.Name
+            component.Properties.Item(2).value = 2
             
             PopulateTableClass table.Name, table, component
             
@@ -96,24 +100,30 @@ Private Sub CreateDatabaseSchemaClass(ByVal moduleNames As Dictionary, project A
     Dim component As VBIDE.vbComponent
     Set component = project.VBComponents.Add(vbext_ct_ClassModule)
     component.Name = dbSchemaClass
+    component.CodeModule.Parent.Properties.Item(2).value = 2
     
     
     Dim table As String
     Dim module As String
 
-        
+    component.CodeModule.InsertLines LineNum, "'@Folder(""Tables"")"
+    IncrementLineNumber
+    
     Dim i As Variant
     For Each i In moduleNames.Keys
         table = i
         module = moduleNames(i)
 
-        With component.codeModule
+        With component.CodeModule
             LineNum = .CountOfLines + 1
                 .InsertLines LineNum, "Public Property Get " & table & "() As " & module
+                
             IncrementLineNumber
                 .InsertLines LineNum, vbTab & "Set " & table & " = New " & module
+                
             IncrementLineNumber
                 .InsertLines LineNum, "End Property" & vbNewLine & vbNewLine
+                
         End With
 
     Next i
@@ -127,33 +137,39 @@ End Sub
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Private Sub PopulateTableClass(tblName As String, table As ADOX.table, component As VBIDE.vbComponent)
         
-    With component.codeModule
-                      
+    With component.CodeModule
+    
       LineNum = .CountOfLines + 1
-          .InsertLines LineNum, "Public Property Get TableName() As String"
-      IncrementLineNumber
-          .InsertLines LineNum, vbTab & "TableName" & " = " & Chr(34) & table.Name & Chr(34)
-      IncrementLineNumber
-          .InsertLines LineNum, "End Property" & vbNewLine
-      IncrementLineNumber
+        .InsertLines LineNum, "'@Folder(""Tables"")"
+        
+        IncrementLineNumber
+            .InsertLines LineNum, "Public Property Get TableName() As String"
+          
+        IncrementLineNumber
+            .InsertLines LineNum, vbTab & "TableName" & " = " & Chr(34) & table.Name & Chr(34)
+            
+        IncrementLineNumber
+            .InsertLines LineNum, "End Property" & vbNewLine & vbNewLine
+            
+        IncrementLineNumber
     
       
-      Dim column As Variant
-      
-      For Each column In table.Columns
-          Dim propName As String
-          propName = column.Name
-
-          IncrementLineNumber
-              .InsertLines LineNum, "Public Property Get " & propName & "() As String"
-              
-          IncrementLineNumber
-              .InsertLines LineNum, vbTab & propName & " = " & Chr(34) & column.Name & Chr(34)
-              
-          IncrementLineNumber
-              .InsertLines LineNum, "End Property" & vbNewLine & vbNewLine
-              
-          IncrementLineNumber
+        Dim column As Variant
+        
+        For Each column In table.columns
+            Dim propName As String
+            propName = column.Name
+        
+            IncrementLineNumber
+                .InsertLines LineNum, "Public Property Get " & propName & "() As String"
+                
+            IncrementLineNumber
+                .InsertLines LineNum, vbTab & propName & " = " & Chr(34) & column.Name & Chr(34)
+                
+            IncrementLineNumber
+                .InsertLines LineNum, "End Property" & vbNewLine & vbNewLine
+                
+            IncrementLineNumber
         Next
     End With
     
