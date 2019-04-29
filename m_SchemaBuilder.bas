@@ -188,7 +188,7 @@ Private Sub RemoveExistingTables(project As VBIDE.vbProject)
     Dim i As Long
     Dim collClassNames As New Collection
     
-    For i = 1 To project.VBComponents.Count
+                    For i = 1 To project.VBComponents.Count - 1
         Dim cName As String
         cName = project.VBComponents(i).Name
         
