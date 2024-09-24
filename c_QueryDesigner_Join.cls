@@ -21,7 +21,6 @@ Public Enum JoinTypeEnum
     Right
 End Enum
 
-
 Public Property Let LeftTableName(value As String)
     p_LeftTable = value
 End Property
@@ -38,22 +37,16 @@ Public Property Let rightValue(value As String)
     p_RightValue = value
 End Property
 
-
 Public Property Get JoinText() As String
     JoinText = "(" & p_LeftTable & p_JoinType & p_RightTable & " ON " & p_LeftValue & " = " & p_RightValue & ")"
 End Property
 
-
 Public Sub SetJoinType(jt As JoinTypeEnum)
-    
     If jt = Inner Then
-        p_JoinType = " INNER JOIN "
-    
+        p_JoinType = " INNER JOIN "    
     ElseIf jt = Left Then
-        p_JoinType = " LEFT JOIN "
-    
+        p_JoinType = " LEFT JOIN "    
     ElseIf jt = Right Then
         p_JoinType = " RIGHT JOIN "
-    End If
-    
+    End If    
 End Sub

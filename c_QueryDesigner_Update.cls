@@ -14,14 +14,12 @@ Private p_TableName As String
 Private p_Where As String
 Private p_JoinExpression As String
 
-
 ''''''''''''
 'CONSTRUCTOR
 ''''''''''''
 Private Sub Class_Initialize()
     Set p_Columns = New Collection
 End Sub
-
 
 '''''''''''
 'PROPERTIES
@@ -41,28 +39,19 @@ Public Sub SetColumnWithTablePrefix(TableName As String, columnName As String, e
     p_Columns.Add TableName & "." & columnName & " = " & equalsValue
 End Sub
 
-
 Public Property Let whereClause(value As String)
     p_Where = value
 End Property
 
-
-
-
-
-Public Function GetUpdateCommand() As String
-    
+Public Function GetUpdateCommand() As String    
     Dim update As String
     Dim table As String
-    
     If p_JoinExpression <> vbNullString Then
         update = "UPDATE " & p_JoinExpression
     Else
         update = "UPDATE " & p_TableName
     End If
-    
     update = update & " SET " & Join(CollectionToArray(p_Columns), ", ") & " " & p_Where
-    
     GetUpdateCommand = update
 End Function
 
@@ -71,16 +60,11 @@ End Function
 '''''''''''''''''
 'CONVERTS A COLLECTION INTO AN ARRAY
 Private Function CollectionToArray(myCol As Collection) As Variant
- 
     Dim Result  As Variant
-    Dim cnt     As Long
- 
-    ReDim Result(myCol.Count - 1)
- 
+    Dim cnt     As Long 
+    ReDim Result(myCol.Count - 1) 
     For cnt = 0 To myCol.Count - 1
         Result(cnt) = myCol(cnt + 1)
     Next cnt
- 
     CollectionToArray = Result
-    
 End Function
